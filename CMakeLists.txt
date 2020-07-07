@@ -11,6 +11,7 @@ set(NCCL_ROOT $ENV{NCCL_ROOT} CACHE PATH "NCCL root directory")
 set(NUM_MAKE_JOBS "" CACHE STRING "Number of jobs concurrently run during the build (passed as make -j parameter)")
 set(CUDA_VERSION $ENV{CUDA_VERSION} CACHE STRING "CUDA version")
 set(CUDNN_VERSION $ENV{CUDNN_VERSION} CACHE STRING "CUDNN version")
+set(CUDNN_INCLUDE $ENV{CUDNN_INCLUDE} CACHE STRING "CUDNN include path")
 
 if(${CMAKE_VERSION} VERSION_LESS "3.7.0")
        # ExternalProject_Add doesn't know the option SOURCE_SUBDIR in CMake before 3.7
@@ -52,9 +53,9 @@ ExternalProject_Add(tensorflow_src
     -Dtensorflow_PATH_STATIC_LIB=${CUDA_ROOT}/lib64
     -Dtensorflow_CUDA_LIBRARY_PATH=${CUDA_ROOT}/lib64
     -DCUDA_CUDA_LIBRARY=${CUDA_ROOT}/lib64/stubs/libcuda.so
-    -Dtensorflow_PATH_NCCL_STATIC_LIB=${NCCL_ROOT}/lib
-    -Dtensorflow_CUDNN_INCLUDE=${CUDNN_ROOT}/include
-    -Dtensorflow_PATH_CUDNN_STATIC_LIB=${CUDNN_ROOT}/lib64
+    -Dtensorflow_PATH_NCCL_STATIC_LIB=${NCCL_ROOT}
+    -Dtensorflow_CUDNN_INCLUDE=${CUDNN_INCLUDE}
+    -Dtensorflow_PATH_CUDNN_STATIC_LIB=${CUDNN_ROOT}
     -Dtensorflow_CUDA_VERSION=${CUDA_VERSION}
     -Dtensorflow_CUDNN_VERSION=${CUDNN_VERSION}
 )
@@ -64,8 +65,17 @@ add_dependencies(${PROJECT_NAME} tensorflow_src)
 target_link_libraries(${PROJECT_NAME}
   ${CATKIN_DEVEL_PREFIX}/lib/libtensorflow${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-cs_install()
+#cs_install()
+install(DIRECTORY ${CATKIN_DEVEL_PREFIX}/include/tensorflow
+        DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+        FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CATKIN_DEVEL_PREFIX}/lib/
+        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        FILES_MATCHING PATTERN "libtensorflow*")
 
 cs_export(
   INCLUDE_DIRS ${CATKIN_DEVEL_PREFIX}/include
 CFG_EXTRAS tensorflow-extras.cmake)
+
+message(${CATKIN_DEVEL_PREFIX}/include)
+
